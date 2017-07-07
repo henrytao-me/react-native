@@ -16,6 +16,7 @@ import java.util.List;
 
 import android.graphics.Typeface;
 import android.os.Build;
+import android.support.v4.util.Pair;
 import android.text.BoringLayout;
 import android.text.Layout;
 import android.text.Spannable;
@@ -175,13 +176,38 @@ public class ReactTextShadowNode extends LayoutShadowNode {
                     textShadowNode.mTextShadowColor)));
       }
       if (!Float.isNaN(textShadowNode.getEffectiveLineHeight())) {
-        ops.add(new SetSpanOperation(
-                start,
-                end,
-                new CustomLineHeightSpan(textShadowNode.getEffectiveLineHeight())));
+        // Disable all children lineHeightSpan
+        //ops.add(new SetSpanOperation(
+        //        start,
+        //        end,
+        //        new CustomLineHeightSpan(textShadowNode.getEffectiveLineHeight())));
       }
       ops.add(new SetSpanOperation(start, end, new ReactTagSpan(textShadowNode.getReactTag())));
     }
+  }
+
+  private static Pair<Integer, Float> getLineInfo(ReactTextShadowNode textShadowNode) {
+    Pair<Integer, Float> lineInfo = new Pair<>(textShadowNode.mFontSize, textShadowNode.getEffectiveLineHeight());
+    for (int i = 0, length = textShadowNode.getChildCount(); i < length; i++) {
+      ReactShadowNode child = textShadowNode.getChildAt(i);
+      if (child instanceof ReactTextShadowNode) {
+        Pair<Integer, Float> childInfo = getLineInfo((ReactTextShadowNode) child);
+        int fontSize = lineInfo.first;
+        if (lineInfo.first == UNSET) {
+          fontSize = lineInfo.first;
+        } else if (childInfo.first != UNSET) {
+          fontSize = Math.max(childInfo.first, lineInfo.first);
+        }
+        float lineHeight = lineInfo.second;
+        if (Float.isNaN(lineInfo.second)) {
+          lineHeight = childInfo.second;
+        } else if (!Float.isNaN(childInfo.second)) {
+          lineHeight = Math.max(childInfo.second, lineInfo.second);
+        }
+        lineInfo = new Pair<>(fontSize, Math.max(fontSize, lineHeight));
+      }
+    }
+    return lineInfo;
   }
 
   protected static Spannable fromTextCSSNode(ReactTextShadowNode textCSSNode) {
@@ -218,7 +244,20 @@ public class ReactTextShadowNode extends LayoutShadowNode {
       }
       op.execute(sb);
     }
+
+    // Apply lineHeightSpan globally
+    Pair<Integer, Float> lineInfo = getLineInfo(textCSSNode);
+    if (lineInfo.first != UNSET && !Float.isNaN(lineInfo.second)) {
+      textCSSNode.mLineInfo = lineInfo;
+      sb.setSpan(new CustomLineHeightSpan(lineInfo.first, lineInfo.second),
+        0, sb.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+    }
+
     return sb;
+  }
+
+  private float getLineSpacing() {
+    return mLineInfo != null ? (mLineInfo.second - mLineInfo.first) / 2 : 0;
   }
 
   private final YogaMeasureFunction mTextMeasureFunction =
@@ -257,12 +296,12 @@ public class ReactTextShadowNode extends LayoutShadowNode {
                 hintWidth,
                 Layout.Alignment.ALIGN_NORMAL,
                 1.f,
-                0.f,
+                getLineSpacing(),
                 true);
             } else {
               layout = StaticLayout.Builder.obtain(text, 0, text.length(), textPaint, hintWidth)
                 .setAlignment(Layout.Alignment.ALIGN_NORMAL)
-                .setLineSpacing(0.f, 1.f)
+                .setLineSpacing(getLineSpacing(), 1.f)
                 .setIncludePad(true)
                 .setBreakStrategy(mTextBreakStrategy)
                 .setHyphenationFrequency(Layout.HYPHENATION_FREQUENCY_NORMAL)
@@ -278,7 +317,7 @@ public class ReactTextShadowNode extends LayoutShadowNode {
                 boring.width,
                 Layout.Alignment.ALIGN_NORMAL,
                 1.f,
-                0.f,
+                getLineSpacing(),
                 boring,
                 true);
           } else {
@@ -291,12 +330,12 @@ public class ReactTextShadowNode extends LayoutShadowNode {
                   (int) width,
                   Layout.Alignment.ALIGN_NORMAL,
                   1.f,
-                  0.f,
+                  getLineSpacing(),
                   true);
             } else {
               layout = StaticLayout.Builder.obtain(text, 0, text.length(), textPaint, (int) width)
                 .setAlignment(Layout.Alignment.ALIGN_NORMAL)
-                .setLineSpacing(0.f, 1.f)
+                .setLineSpacing(getLineSpacing(), 1.f)
                 .setIncludePad(true)
                 .setBreakStrategy(mTextBreakStrategy)
                 .setHyphenationFrequency(Layout.HYPHENATION_FREQUENCY_NORMAL)
@@ -351,6 +390,8 @@ public class ReactTextShadowNode extends LayoutShadowNode {
 
   private boolean mIsUnderlineTextDecorationSet = false;
   private boolean mIsLineThroughTextDecorationSet = false;
+
+  private Pair<Integer, Float> mLineInfo;
 
   /**
    * mFontStyle can be {@link Typeface#NORMAL} or {@link Typeface#ITALIC}.
@@ -653,7 +694,8 @@ public class ReactTextShadowNode extends LayoutShadowNode {
           getPadding(Spacing.END),
           getPadding(Spacing.BOTTOM),
           getTextAlign(),
-          mTextBreakStrategy
+          mTextBreakStrategy,
+          mLineInfo
         );
       uiViewOperationQueue.enqueueUpdateExtraData(getReactTag(), reactTextUpdate);
     }
