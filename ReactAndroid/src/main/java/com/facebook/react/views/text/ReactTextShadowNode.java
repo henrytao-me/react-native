@@ -343,13 +343,16 @@ public class ReactTextShadowNode extends LayoutShadowNode {
             }
           }
 
+          int space = (int) getLineSpacing();
           if (mNumberOfLines != UNSET &&
               mNumberOfLines < layout.getLineCount()) {
             return YogaMeasureOutput.make(
                 layout.getWidth(),
                 layout.getLineBottom(mNumberOfLines - 1));
           } else {
-            return YogaMeasureOutput.make(layout.getWidth(), layout.getHeight());
+            int layoutHeight = layout.getHeight();
+            layoutHeight = Build.VERSION.SDK_INT < Build.VERSION_CODES.M ? layoutHeight - space : layoutHeight;
+            return YogaMeasureOutput.make(layout.getWidth(), layoutHeight);
           }
         }
       };

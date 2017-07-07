@@ -76,6 +76,34 @@ class TextExample extends React.Component {
   render() {
     return (
       <RNTesterPage title="<Text>">
+        <RNTesterBlock title="New Line Spacing">
+          <Text style={{ fontSize: 20, lineHeight: 40, backgroundColor: '#ffaaaa' }}>
+            This is perfect line spacing
+          </Text>
+          <Text style={{ fontSize: 20, lineHeight: 40, backgroundColor: '#00cccc' }}>
+            This is perfect line spacing
+            <Text>
+              This is <Text style={{ fontSize: 12 }}>perfect</Text> line spacing
+            </Text>
+          </Text>
+          <Text style={{ fontSize: 20, lineHeight: 40, backgroundColor: '#ffaaaa' }}>
+            This is perfect line spacing
+            <Text>
+              This is <Text style={{ fontSize: 12 }}>perfect</Text> line spacing
+            </Text>
+            This is perfect line spacing
+            This is perfect line spacing
+          </Text>
+          <Text numberOfLines={3} style={{ fontSize: 20, lineHeight: 40, backgroundColor: '#00cccc' }}>
+            This is perfect line spacing
+            <Text>
+              This is <Text style={{ fontSize: 12 }}>perfect</Text> line spacing
+            </Text>
+            This is perfect line spacing
+            This is perfect line spacing
+            This is perfect line spacing
+          </Text>
+        </RNTesterBlock>
         <RNTesterBlock title="Wrap">
           <Text>
             The text should wrap if it goes on multiple lines.
@@ -421,17 +449,6 @@ class TextExample extends React.Component {
             </View>
           </View>
           <Text>By default Android will put extra space above text to allow for upper-case accents or other ascenders. With some fonts, this can make text look slightly misaligned when centered vertically.</Text>
-        </RNTesterBlock>
-        <RNTesterBlock title="New Line Spacing">
-          <Text style={{ fontSize: 20, lineHeight: 40, backgroundColor: '#ffaaaa' }}>
-            This is perfect line spacing
-          </Text>
-          <Text style={{ fontSize: 20, lineHeight: 40, backgroundColor: '#00cccc' }}>
-            This is perfect line spacing
-            <Text>
-              This is <Text style={{ fontSize: 12 }}>perfect</Text> line spacing
-            </Text>
-          </Text>
         </RNTesterBlock>
       </RNTesterPage>
     );
