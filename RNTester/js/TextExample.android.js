@@ -76,6 +76,34 @@ class TextExample extends React.Component {
   render() {
     return (
       <RNTesterPage title="<Text>">
+        <RNTesterBlock title="New Line Spacing">
+          <Text style={{ fontSize: 20, lineHeight: 40, backgroundColor: '#ffaaaa' }}>
+            This is perfect line spacing
+          </Text>
+          <Text style={{ fontSize: 20, lineHeight: 40, backgroundColor: '#00cccc' }}>
+            This is perfect line spacing
+            <Text>
+              This is <Text style={{ fontSize: 12 }}>perfect</Text> line spacing
+            </Text>
+          </Text>
+          <Text style={{ fontSize: 20, lineHeight: 40, backgroundColor: '#ffaaaa' }}>
+            This is perfect line spacing
+            <Text>
+              This is <Text style={{ fontSize: 12 }}>perfect</Text> line spacing
+            </Text>
+            This is perfect line spacing
+            This is perfect line spacing
+          </Text>
+          <Text numberOfLines={3} style={{ fontSize: 20, lineHeight: 40, backgroundColor: '#00cccc' }}>
+            This is perfect line spacing
+            <Text>
+              This is <Text style={{ fontSize: 12 }}>perfect</Text> line spacing
+            </Text>
+            This is perfect line spacing
+            This is perfect line spacing
+            This is perfect line spacing
+          </Text>
+        </RNTesterBlock>
         <RNTesterBlock title="Wrap">
           <Text>
             The text should wrap if it goes on multiple lines.

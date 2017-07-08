@@ -174,19 +174,28 @@ public class ReactTextShadowNode extends LayoutShadowNode {
                     textShadowNode.mTextShadowRadius,
                     textShadowNode.mTextShadowColor)));
       }
-      if (!Float.isNaN(textShadowNode.getEffectiveLineHeight())) {
-        ops.add(new SetSpanOperation(
-                start,
-                end,
-                new CustomLineHeightSpan(textShadowNode.getEffectiveLineHeight())));
-      }
       ops.add(new SetSpanOperation(start, end, new ReactTagSpan(textShadowNode.getReactTag())));
     }
+  }
+
+  private static LineInfo getLineInfo(ReactTextShadowNode textShadowNode) {
+    LineInfo lineInfo = new LineInfo(textShadowNode.mFontSize, textShadowNode.getEffectiveLineHeight());
+    for (int i = 0, length = textShadowNode.getChildCount(); i < length; i++) {
+      ReactShadowNode child = textShadowNode.getChildAt(i);
+      if (child instanceof ReactTextShadowNode) {
+        lineInfo.merge(getLineInfo((ReactTextShadowNode) child));
+      }
+    }
+    return lineInfo;
   }
 
   protected static Spannable fromTextCSSNode(ReactTextShadowNode textCSSNode) {
     SpannableStringBuilder sb = new SpannableStringBuilder();
     // TODO(5837930): Investigate whether it's worth optimizing this part and do it if so
+
+    int defaultFontSize = textCSSNode.mAllowFontScaling
+      ? (int) Math.ceil(PixelUtil.toPixelFromSP(ViewDefaults.FONT_SIZE_SP))
+      : (int) Math.ceil(PixelUtil.toPixelFromDIP(ViewDefaults.FONT_SIZE_SP));
 
     // The {@link SpannableStringBuilder} implementation require setSpan operation to be called
     // up-to-bottom, otherwise all the spannables that are withing the region for which one may set
@@ -195,9 +204,7 @@ public class ReactTextShadowNode extends LayoutShadowNode {
     buildSpannedFromTextCSSNode(textCSSNode, sb, ops);
     if (textCSSNode.mFontSize == UNSET) {
       sb.setSpan(
-          new AbsoluteSizeSpan(textCSSNode.mAllowFontScaling
-          ? (int) Math.ceil(PixelUtil.toPixelFromSP(ViewDefaults.FONT_SIZE_SP))
-          : (int) Math.ceil(PixelUtil.toPixelFromDIP(ViewDefaults.FONT_SIZE_SP))),
+          new AbsoluteSizeSpan(defaultFontSize),
           0,
           sb.length(),
           Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
@@ -218,6 +225,14 @@ public class ReactTextShadowNode extends LayoutShadowNode {
       }
       op.execute(sb);
     }
+
+    // Apply lineHeightSpan globally
+    LineInfo lineInfo = getLineInfo(textCSSNode);
+    lineInfo.setDefaultFontSize(defaultFontSize);
+    textCSSNode.mLineInfo = lineInfo;
+    sb.setSpan(new CustomLineHeightSpan(lineInfo.getComputeFontSize(), lineInfo.getComputeLineHeight()),
+      0, sb.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+
     return sb;
   }
 
@@ -257,12 +272,12 @@ public class ReactTextShadowNode extends LayoutShadowNode {
                 hintWidth,
                 Layout.Alignment.ALIGN_NORMAL,
                 1.f,
-                0.f,
+                mLineInfo.getLineSpacing(),
                 true);
             } else {
               layout = StaticLayout.Builder.obtain(text, 0, text.length(), textPaint, hintWidth)
                 .setAlignment(Layout.Alignment.ALIGN_NORMAL)
-                .setLineSpacing(0.f, 1.f)
+                .setLineSpacing(mLineInfo.getLineSpacing(), 1.f)
                 .setIncludePad(true)
                 .setBreakStrategy(mTextBreakStrategy)
                 .setHyphenationFrequency(Layout.HYPHENATION_FREQUENCY_NORMAL)
@@ -278,7 +293,7 @@ public class ReactTextShadowNode extends LayoutShadowNode {
                 boring.width,
                 Layout.Alignment.ALIGN_NORMAL,
                 1.f,
-                0.f,
+                mLineInfo.getLineSpacing(),
                 boring,
                 true);
           } else {
@@ -291,12 +306,12 @@ public class ReactTextShadowNode extends LayoutShadowNode {
                   (int) width,
                   Layout.Alignment.ALIGN_NORMAL,
                   1.f,
-                  0.f,
+                  mLineInfo.getLineSpacing(),
                   true);
             } else {
               layout = StaticLayout.Builder.obtain(text, 0, text.length(), textPaint, (int) width)
                 .setAlignment(Layout.Alignment.ALIGN_NORMAL)
-                .setLineSpacing(0.f, 1.f)
+                .setLineSpacing(mLineInfo.getLineSpacing(), 1.f)
                 .setIncludePad(true)
                 .setBreakStrategy(mTextBreakStrategy)
                 .setHyphenationFrequency(Layout.HYPHENATION_FREQUENCY_NORMAL)
@@ -304,13 +319,16 @@ public class ReactTextShadowNode extends LayoutShadowNode {
             }
           }
 
+          int space = (int) mLineInfo.getLineSpacing();
           if (mNumberOfLines != UNSET &&
               mNumberOfLines < layout.getLineCount()) {
             return YogaMeasureOutput.make(
                 layout.getWidth(),
                 layout.getLineBottom(mNumberOfLines - 1));
           } else {
-            return YogaMeasureOutput.make(layout.getWidth(), layout.getHeight());
+            int layoutHeight = layout.getHeight();
+            layoutHeight = Build.VERSION.SDK_INT < Build.VERSION_CODES.M ? layoutHeight - space : layoutHeight;
+            return YogaMeasureOutput.make(layout.getWidth(), layoutHeight);
           }
         }
       };
@@ -351,6 +369,8 @@ public class ReactTextShadowNode extends LayoutShadowNode {
 
   private boolean mIsUnderlineTextDecorationSet = false;
   private boolean mIsLineThroughTextDecorationSet = false;
+
+  private LineInfo mLineInfo;
 
   /**
    * mFontStyle can be {@link Typeface#NORMAL} or {@link Typeface#ITALIC}.
@@ -653,7 +673,8 @@ public class ReactTextShadowNode extends LayoutShadowNode {
           getPadding(Spacing.END),
           getPadding(Spacing.BOTTOM),
           getTextAlign(),
-          mTextBreakStrategy
+          mTextBreakStrategy,
+          mLineInfo
         );
       uiViewOperationQueue.enqueueUpdateExtraData(getReactTag(), reactTextUpdate);
     }

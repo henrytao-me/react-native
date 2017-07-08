@@ -16,9 +16,11 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Build;
+import android.support.v4.util.Pair;
 import android.text.Layout;
 import android.text.Spanned;
 import android.text.TextUtils;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -75,6 +77,8 @@ public class ReactTextView extends TextView implements ReactCompoundView {
         setBreakStrategy(update.getTextBreakStrategy());
       }
     }
+    LineInfo lineInfo = update.getLineInfo();
+    setLineSpacing(lineInfo != null ? lineInfo.getLineSpacing() : 0, 1);
   }
 
   @Override
