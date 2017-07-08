@@ -167,6 +167,40 @@ exports.examples = [
     );
   },
 }, {
+  title: 'New Line Spacing',
+  render: function() {
+    return (
+      <View>
+        <Text style={{ fontSize: 20, lineHeight: 40, backgroundColor: '#ffaaaa' }}>
+            This is perfect line spacing
+        </Text>
+        <Text style={{ fontSize: 20, lineHeight: 40, backgroundColor: '#00cccc' }}>
+          This is perfect line spacing
+          <Text>
+            This is <Text style={{ fontSize: 12 }}>perfect</Text> line spacing
+          </Text>
+        </Text>
+        <Text style={{ fontSize: 20, lineHeight: 40, backgroundColor: '#ffaaaa' }}>
+          This is perfect line spacing
+          <Text>
+            This is <Text style={{ fontSize: 12 }}>perfect</Text> line spacing
+          </Text>
+          This is perfect line spacing
+          This is perfect line spacing
+        </Text>
+        <Text numberOfLines={3} style={{ fontSize: 20, lineHeight: 40, backgroundColor: '#00cccc' }}>
+          This is perfect line spacing
+          <Text>
+            This is <Text style={{ fontSize: 12 }}>perfect</Text> line spacing
+          </Text>
+          This is perfect line spacing
+          This is perfect line spacing
+          This is perfect line spacing
+        </Text>
+      </View>
+    );
+  },
+}, {
   title: 'Padding',
   render: function() {
     return (

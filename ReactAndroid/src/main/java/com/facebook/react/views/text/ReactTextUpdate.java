@@ -9,7 +9,6 @@
 
 package com.facebook.react.views.text;
 
-import android.support.v4.util.Pair;
 import android.text.Layout;
 import android.text.Spannable;
 
@@ -29,7 +28,7 @@ public class ReactTextUpdate {
   private final float mPaddingBottom;
   private final int mTextAlign;
   private final int mTextBreakStrategy;
-  private final Pair<Integer, Float> mLineInfo;
+  private final LineInfo mLineInfo;
 
   /**
    * @deprecated Use a non-deprecated constructor for ReactTextUpdate instead. This one remains
@@ -67,7 +66,7 @@ public class ReactTextUpdate {
     float paddingBottom,
     int textAlign,
     int textBreakStrategy,
-    Pair<Integer, Float> lineInfo) {
+    LineInfo lineInfo) {
     mText = text;
     mJsEventCounter = jsEventCounter;
     mContainsImages = containsImages;
@@ -116,7 +115,7 @@ public class ReactTextUpdate {
     return mTextBreakStrategy;
   }
 
-  public Pair<Integer, Float> getLineInfo() {
+  public LineInfo getLineInfo() {
     return mLineInfo;
   }
 }

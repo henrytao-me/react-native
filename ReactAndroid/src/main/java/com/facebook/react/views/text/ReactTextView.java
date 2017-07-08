@@ -77,10 +77,8 @@ public class ReactTextView extends TextView implements ReactCompoundView {
         setBreakStrategy(update.getTextBreakStrategy());
       }
     }
-    Pair<Integer, Float> lineInfo = update.getLineInfo();
-    if (lineInfo != null) {
-      setLineSpacing((lineInfo.second - lineInfo.first) / 2, 1);
-    }
+    LineInfo lineInfo = update.getLineInfo();
+    setLineSpacing(lineInfo != null ? lineInfo.getLineSpacing() : 0, 1);
   }
 
   @Override
